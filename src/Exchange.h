@@ -20,6 +20,7 @@ public:
     Order const * insert(Order const &);
     Order const * remove(Order const &);
     Order const * lookup(Symbol const & symbol, std::string const & clordid);
+    OrderBook const * lookup(Symbol const & symbol);
 
     std::vector<Order> match();
 

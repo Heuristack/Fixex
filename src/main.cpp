@@ -12,26 +12,5 @@ using namespace fixex;
 int main()
 {
     std::cout << "Fixex: a simple exchange based on " << FIX::BeginString_FIX42 << std::endl;
-
-    Order bid("XYZ", "ABC", "201808210001", "APPL", Order::Type::MARKET, Order::Side::BUY,  220, 200);
-    Order ask("XYZ", "ABC", "201808210002", "APPL", Order::Type::MARKET, Order::Side::SELL, 215, 100);
-    std::cout << bid << std::endl;
-    std::cout << ask << std::endl;
-
-    OrderBook orderbook;
-    orderbook.insert(bid);
-    orderbook.insert(ask);
-    std::cout << orderbook << std::endl;
-
-    auto orders = orderbook.match();
-    std::cout << orders.size() << std::endl;
-    std::cout << orderbook << std::endl;
-
-    Exchange exchange;
-    exchange.insert(bid);
-    exchange.insert(ask);
-    std::cout << exchange << std::endl;
-    exchange.match();
-    std::cout << exchange << std::endl;
 }
 

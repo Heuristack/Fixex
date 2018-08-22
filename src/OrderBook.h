@@ -26,8 +26,8 @@ public:
 
     std::vector<Order> match();
 
-    size_t get_bidsize() { return m_bids.size(); }
-    size_t get_asksize() { return m_asks.size(); }
+    size_t get_bidsize() const { return m_bids.size(); }
+    size_t get_asksize() const { return m_asks.size(); }
 
 private:
     template <typename Container, typename Iterator = typename Container::const_iterator>

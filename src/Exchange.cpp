@@ -17,6 +17,11 @@ Order const * Exchange::lookup(Symbol const & symbol, std::string const & clordi
     return m_orderbooks[symbol].lookup(clordid);
 }
 
+OrderBook const * Exchange::lookup(Symbol const & symbol)
+{
+    return &(m_orderbooks[symbol]);
+}
+
 std::vector<Order> Exchange::match()
 {
     std::vector<Order> orders;
