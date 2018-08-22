@@ -1,3 +1,4 @@
+#include "OrderBook.h"
 #include "Order.h"
 
 #include "quickfix/Utility.h"
@@ -5,11 +6,26 @@
 
 #include <iostream>
 
+using namespace fixex;
+
 int main()
 {
     std::cout << "Fixex: a simple exchange based on " << FIX::BeginString_FIX42 << std::endl;
-    using namespace fixex;
-    Order order("XYZ", "ABC", "201808210001", "APPL", Order::Type::MARKET, Order::Side::BUY, 500, 100);
-    std::cout << order << std::endl;
+
+    Order bid("XYZ", "ABC", "201808210001", "APPL", Order::Type::MARKET, Order::Side::BUY,  220, 200);
+    Order ask("XYZ", "ABC", "201808210002", "APPL", Order::Type::MARKET, Order::Side::SELL, 215, 100);
+    std::cout << bid << std::endl;
+    std::cout << ask << std::endl;
+
+    OrderBook orderbook;
+    orderbook.insert(bid);
+    orderbook.insert(ask);
+    std::cout << (*orderbook.lookup(bid.get_clordid())) << std::endl;
+    std::cout << (*orderbook.lookup(ask.get_clordid())) << std::endl;
+
+    auto orders = orderbook.match();
+    std::cout << orders.size() << std::endl;
+    std::cout << orderbook.get_bidsize() << std::endl;
+    std::cout << orderbook.get_asksize() << std::endl;
 }
 
