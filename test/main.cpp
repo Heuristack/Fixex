@@ -20,7 +20,7 @@ TEST_CASE("Integrate Quickfix", "integration")
     }
 }
 
-TEST_CASE("Simple exchange based on FIX", "Fixex")
+TEST_CASE("Exchange Functionalities", "exchange")
 {
     Order bid("XYZ", "ABC", "201808210001", "APPL", Order::Type::MARKET, Order::Side::BUY,  220, 200);
     Order ask("XYZ", "ABC", "201808210002", "APPL", Order::Type::MARKET, Order::Side::SELL, 215, 100);
@@ -47,29 +47,41 @@ TEST_CASE("Simple exchange based on FIX", "Fixex")
         REQUIRE(orderbook.lookup(ask.get_clordid())->get_price() == ask.get_price());
     }
 
+    auto filled_orders = orderbook.match();
+
     SECTION("OrderBook can match")
     {
-        auto filled_orders = orderbook.match();
         REQUIRE(orderbook.get_bidsize() == 1);
         REQUIRE(orderbook.get_asksize() == 0);
         REQUIRE(filled_orders.size() == 2);
     }
 
+    SECTION("Order can execute")
+    {
+        REQUIRE(orderbook.lookup(bid.get_clordid())->get_lastqty() == 100);
+        REQUIRE(orderbook.lookup(bid.get_clordid())->get_lastpx() == 215);
+        REQUIRE(orderbook.lookup(bid.get_clordid())->get_leavesqty() == 100);
+        REQUIRE(orderbook.lookup(bid.get_clordid())->get_avgpx() == 215);
+        REQUIRE(orderbook.lookup(bid.get_clordid())->get_cumqty() == 100);
+    }
+
     Exchange exchange;
     exchange.insert(bid);
     exchange.insert(ask);
+
     SECTION("Exchange can insert Orders")
     {
         REQUIRE(exchange.lookup(bid.get_symbol())->get_bidsize() == 1);
         REQUIRE(exchange.lookup(ask.get_symbol())->get_asksize() == 1);
     }
 
+    auto exchange_filled_orders = exchange.match();
+
     SECTION("Exchange can match")
     {
-        auto filled_orders = exchange.match();
         REQUIRE(exchange.lookup(bid.get_symbol())->get_bidsize() == 1);
         REQUIRE(exchange.lookup(ask.get_symbol())->get_asksize() == 0);
-        REQUIRE(filled_orders.size() == 2);
+        REQUIRE(exchange_filled_orders.size() == 2);
     }
 }
 
