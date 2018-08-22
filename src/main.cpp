@@ -20,12 +20,10 @@ int main()
     OrderBook orderbook;
     orderbook.insert(bid);
     orderbook.insert(ask);
-    std::cout << (*orderbook.lookup(bid.get_clordid())) << std::endl;
-    std::cout << (*orderbook.lookup(ask.get_clordid())) << std::endl;
+    std::cout << orderbook << std::endl;
 
     auto orders = orderbook.match();
     std::cout << orders.size() << std::endl;
-    std::cout << orderbook.get_bidsize() << std::endl;
-    std::cout << orderbook.get_asksize() << std::endl;
+    std::cout << orderbook << std::endl;
 }
 
