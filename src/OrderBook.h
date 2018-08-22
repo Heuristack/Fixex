@@ -3,7 +3,7 @@
 
 #include "Order.h"
 #include <string>
-#include <queue>
+#include <vector>
 #include <functional>
 #include <map>
 #include <algorithm>
@@ -24,7 +24,7 @@ public:
     Order const * remove(Order const &);
     Order const * lookup(std::string const & clordid);
 
-    std::queue<Order> match();
+    std::vector<Order> match();
 
     size_t get_bidsize() { return m_bids.size(); }
     size_t get_asksize() { return m_asks.size(); }
@@ -33,15 +33,14 @@ private:
     template <typename Container, typename Iterator = typename Container::const_iterator>
     Iterator lookup(Container const & container, std::string const & clordid)
     {
-        return std::find_if(container.begin(), container.end(), [clordid](std::pair<Price,Order> const & priceorder){
-            return priceorder.second.get_clordid() == clordid;
+        return std::find_if(container.begin(), container.end(), [clordid](std::pair<Price,Order> const & price_order){
+            return price_order.second.get_clordid() == clordid;
         });
     }
 
     void match(Order & bid, Order & ask);
 
 private:
-    std::queue<Order> m_orders;
     BidOrders m_bids;
     AskOrders m_asks;
 

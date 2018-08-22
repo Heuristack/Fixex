@@ -1,5 +1,6 @@
 #include "OrderBook.h"
 #include "Order.h"
+#include "Exchange.h"
 
 #include "quickfix/Utility.h"
 #include "quickfix/Values.h"
@@ -25,5 +26,12 @@ int main()
     auto orders = orderbook.match();
     std::cout << orders.size() << std::endl;
     std::cout << orderbook << std::endl;
+
+    Exchange exchange;
+    exchange.insert(bid);
+    exchange.insert(ask);
+    std::cout << exchange << std::endl;
+    exchange.match();
+    std::cout << exchange << std::endl;
 }
 

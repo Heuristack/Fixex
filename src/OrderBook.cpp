@@ -60,16 +60,16 @@ void OrderBook::match(Order & bid, Order & ask)
     ask.execute(price, quant);
 }
 
-std::queue<Order> OrderBook::match()
+std::vector<Order> OrderBook::match()
 {
-    std::queue<Order> orders;
+    std::vector<Order> orders;
     while (!m_bids.empty() && !m_asks.empty()) {
         auto & bid = m_bids.begin()->second;
         auto & ask = m_asks.begin()->second;
         if (bid.get_price() > ask.get_price()) {
             match(bid, ask);
-            orders.push(bid);
-            orders.push(ask);
+            orders.push_back(bid);
+            orders.push_back(ask);
             if (bid.is_closed()) remove(bid);
             if (ask.is_closed()) remove(ask);
         }
@@ -80,11 +80,11 @@ std::queue<Order> OrderBook::match()
 
 std::ostream & operator << (std::ostream & stream, OrderBook const & orderbook)
 {
-    for (auto const & priceorder : orderbook.m_bids) {
-        stream << "BID: " << priceorder.second << "\n";
+    for (auto const & price_order : orderbook.m_bids) {
+        stream << "BID: " << price_order.second << "\n";
     }
-    for (auto const & priceorder : orderbook.m_asks) {
-        stream << "ASK: " << priceorder.second << "\n";
+    for (auto const & price_order : orderbook.m_asks) {
+        stream << "ASK: " << price_order.second << "\n";
     }
     return stream;
 }
