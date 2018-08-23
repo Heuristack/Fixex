@@ -2,11 +2,34 @@
 
 namespace fixex {
 
+void Exchange::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionID const & session_id)
+{}
+
+void Exchange::onMessage(FIX42::OrderCancelRequest const & message, FIX::SessionID const & session_id)
+{}
+
+void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::SessionID const & session_id)
+{}
+
+void Exchange::accept(Order const &)
+{}
+
+void Exchange::update(Order const &)
+{}
+
+void Exchange::cancel(Order const &)
+{}
+
+void Exchange::report(Order const *, RequestType)
+{}
+
+void Exchange::reject(Order const *, RequestType)
+{}
+
 Order const * Exchange::insert(Order const & order)
 {
     return m_orderbooks[order.get_symbol()].insert(order);
 }
-
 Order const * Exchange::remove(Order const & order)
 {
     return m_orderbooks[order.get_symbol()].remove(order);

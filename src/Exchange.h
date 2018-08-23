@@ -1,6 +1,7 @@
 #ifndef EXCHANGE_H
 #define EXCHANGE_H
 
+#include "Application.h"
 #include "OrderBook.h"
 #include "Order.h"
 #include <unordered_map>
@@ -10,8 +11,21 @@
 
 namespace fixex {
 
-class Exchange
+class Exchange : public Application
 {
+public:
+    void onMessage(FIX42::NewOrderSingle const &, FIX::SessionID const &) override;
+    void onMessage(FIX42::OrderCancelRequest const &, FIX::SessionID const &) override;
+    void onMessage(FIX42::OrderCancelReplaceRequest const &, FIX::SessionID const &) override;
+
+public:
+    enum class RequestType { CREATE, UPDATE, REMOVE };
+    void accept(Order const &);
+    void update(Order const &);
+    void cancel(Order const &);
+    void report(Order const *, RequestType);
+    void reject(Order const *, RequestType);
+
 public:
     using Symbol = std::string;
     using SymbolIndexedOrderBooks = std::unordered_map<Symbol, OrderBook>;
@@ -20,8 +34,8 @@ public:
     Order const * insert(Order const &);
     Order const * remove(Order const &);
     Order const * lookup(Symbol const & symbol, std::string const & clordid);
-    OrderBook const * lookup(Symbol const & symbol);
 
+    OrderBook const * lookup(Symbol const & symbol);
     std::vector<Order> match();
 
 private:
