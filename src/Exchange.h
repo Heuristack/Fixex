@@ -19,7 +19,7 @@ public:
     void onMessage(FIX42::OrderCancelReplaceRequest const &, FIX::SessionID const &) override;
 
 public:
-    enum class RequestType { CREATE, UPDATE, REMOVE };
+    enum class RequestType { CREATE, UPDATE, REMOVE, TRADED };
     void accept(Order const &);
     void update(Order const &);
     void cancel(Order const &);
