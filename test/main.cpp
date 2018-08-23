@@ -4,6 +4,7 @@
 #include "OrderBook.h"
 #include "Order.h"
 #include "Exchange.h"
+#include "Utility.h"
 
 #include "quickfix/Utility.h"
 #include "quickfix/Values.h"
@@ -82,6 +83,16 @@ TEST_CASE("Exchange Functionalities", "exchange")
         REQUIRE(exchange.lookup(bid.get_symbol())->get_bidsize() == 1);
         REQUIRE(exchange.lookup(ask.get_symbol())->get_asksize() == 0);
         REQUIRE(exchange_filled_orders.size() == 2);
+    }
+}
+
+TEST_CASE("Utilities", "util")
+{
+    IdentifierGenerator generator("G", 5000);
+    SECTION("IdentifierGenerator can generate")
+    {
+        REQUIRE(generator.get() == std::string{"G5000"});
+        REQUIRE(generator.get() == std::string{"G5001"});
     }
 }
 
