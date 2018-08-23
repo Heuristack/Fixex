@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.8)
 set(CMAKE_CXX_STANDARD 11)
 project(Fixex)
 
+set(SOURCE_FILES src/Order.cpp src/OrderBook.cpp src/Exchange.cpp src/Application.cpp src/Utility.cpp)
+
 include_directories(/usr/local/include src)
 link_directories(/usr/local/lib)
 
-add_executable(Fixex src/main.cpp src/Order.cpp src/OrderBook.cpp src/Exchange.cpp)
+add_executable(Fixex src/main.cpp ${SOURCE_FILES})
 target_link_libraries(Fixex quickfix)
 
-add_executable(test test/main.cpp src/Order.cpp src/OrderBook.cpp src/Exchange.cpp)
+add_executable(test test/main.cpp ${SOURCE_FILES})
 target_link_libraries(test quickfix)
 
