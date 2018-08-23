@@ -42,11 +42,18 @@ public:
     throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType) override { crack(message, session_id); }
 
 public:
-    void onMessage(FIX42::NewOrderSingle const &, FIX::SessionID const &) override;
+    IdentifierGenerator & get_ordid_generator() const { return m_generator_ordid; }
+    IdentifierGenerator & get_exeid_generator() const { return m_generator_exeid; }
 
 private:
-    IdentifierGenerator m_generator_ordid;
-    IdentifierGenerator m_generator_exeid;
+    IdentifierGenerator mutable m_generator_ordid;
+    IdentifierGenerator mutable m_generator_exeid;
+};
+
+class Executor : public Application
+{
+public:
+    void onMessage(FIX42::NewOrderSingle const &, FIX::SessionID const &) override;
 };
 
 }

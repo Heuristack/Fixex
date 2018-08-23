@@ -2,7 +2,7 @@
 
 namespace fixex {
 
-void Application::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionID const & session_id)
+void Executor::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionID const & session_id)
 {
     FIX::OrdType ordtype;
     FIX::Symbol symbol;
@@ -22,8 +22,8 @@ void Application::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionI
     message.get(clordid);
 
     FIX42::ExecutionReport executionreport = FIX42::ExecutionReport(
-        FIX::OrderID(m_generator_ordid.get()),
-        FIX::ExecID(m_generator_exeid.get()),
+        FIX::OrderID(get_ordid_generator().get()),
+        FIX::ExecID(get_exeid_generator().get()),
         FIX::ExecTransType(FIX::ExecTransType_NEW),
         FIX::ExecType(FIX::ExecType_FILL),
         FIX::OrdStatus(FIX::OrdStatus_FILLED),

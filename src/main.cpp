@@ -17,7 +17,7 @@ int main() try
 
     FIX::FileStoreFactory store_factory(session_settings);
     FIX::ScreenLogFactory log_factory(session_settings);
-    Application application;
+    Executor application;
 
     FIX::SocketAcceptor acceptor(application, store_factory, session_settings, log_factory);
     acceptor.start();
