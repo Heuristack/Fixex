@@ -24,7 +24,7 @@ void Exchange::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionID c
     }
     message.get(orderqty);
     message.get(timeinforce);
-    Order order(sender, target, clordid, symbol, convert(ordtype), convert(side), price, orderqty);
+    Order order(sender, target, clordid, get_ordid_generator().get(), symbol, convert(ordtype), convert(side), price, orderqty);
     accept(order);
 }
 catch (std::exception const & e)
@@ -96,7 +96,7 @@ void Exchange::report(Order const * order, RequestType reqtype) try
     }
 
     FIX42::ExecutionReport execution = FIX42::ExecutionReport(
-        FIX::OrderID(get_ordid_generator().get()),
+        FIX::OrderID(order->get_orderid()),
         FIX::ExecID(get_exeid_generator().get()),
         FIX::ExecTransType(FIX::ExecTransType_NEW),
         FIX::ExecType(status),
@@ -127,7 +127,7 @@ void Exchange::reject(Order const * order, Order const * origorder, RequestType 
     FIX::SenderCompID sender(order->get_target());
     if (reqtype == RequestType::CREATE) {
         FIX42::ExecutionReport execution = FIX42::ExecutionReport(
-            FIX::OrderID(get_ordid_generator().get()),
+            FIX::OrderID(order->get_orderid()),
             FIX::ExecID(get_exeid_generator().get()),
             FIX::ExecTransType(FIX::ExecTransType_NEW),
             FIX::ExecType(FIX::ExecType_REJECTED),
@@ -146,7 +146,7 @@ void Exchange::reject(Order const * order, Order const * origorder, RequestType 
         FIX::CxlRejResponseTo cxlrejresponseto = '1';
         if (reqtype == RequestType::UPDATE) cxlrejresponseto = '2';
         FIX42::OrderCancelReject cancelreject = FIX42::OrderCancelReject(
-            FIX::OrderID(get_ordid_generator().get()),
+            FIX::OrderID(order->get_orderid()),
             FIX::ClOrdID(order->get_clordid()),
             FIX::OrigClOrdID(origorder->get_clordid()),
             FIX::OrdStatus(FIX::OrdStatus_REJECTED),

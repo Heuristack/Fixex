@@ -2,7 +2,7 @@
 
 namespace fixex {
 
-Order const * OrderBook::insert(Order const & order)
+Order * OrderBook::insert(Order const & order)
 {
     Order * order_ptr = nullptr;
     if (order.get_side() == Order::Side::BUY) {
@@ -16,37 +16,67 @@ Order const * OrderBook::insert(Order const & order)
     return order_ptr;
 }
 
-Order const * OrderBook::remove(Order const & order)
+Order * OrderBook::remove(Order const & order)
 {
-    Order const * order_ptr = &order;
+    Order * order_ptr = nullptr;
     if (order.get_side() == Order::Side::BUY) {
-        auto i = lookup(m_bids, order.get_clordid());
+        auto i = lookup(m_bids, order.get_orderid());
         if (i != m_bids.end()) {
             m_bids.erase(i);
             order_ptr = nullptr;
         }
+        else {
+            i = lookup(m_bids, order.get_clordid());
+            if (i != m_bids.end()) {
+                m_bids.erase(i);
+                order_ptr = nullptr;
+            }
+        }
     }
     else {
-        auto i = lookup(m_asks, order.get_clordid());
+        auto i = lookup(m_asks, order.get_orderid());
         if (i != m_asks.end()) {
             m_asks.erase(i);
             order_ptr = nullptr;
+        }
+        else {
+            i = lookup(m_asks, order.get_clordid());
+            if (i != m_asks.end()) {
+                m_asks.erase(i);
+                order_ptr = nullptr;
+            }
         }
     }
     return order_ptr;
 }
 
-Order const * OrderBook::lookup(std::string const & clordid)
+Order * OrderBook::remove(std::string const & orderid_or_clordid)
 {
-    Order const * order_ptr = nullptr;
-    auto bi = lookup(m_bids, clordid);
+    Order * order_ptr = nullptr;
+    auto bi = lookup(m_bids, orderid_or_clordid);
     if (bi != m_bids.end()) {
-        order_ptr = &bi->second;
+        m_bids.erase(bi);
         return order_ptr;
     }
-    auto ai = lookup(m_asks, clordid);
+    auto ai = lookup(m_asks, orderid_or_clordid);
     if (ai != m_asks.end()) {
-        order_ptr = &ai->second;
+        m_asks.erase(ai);
+        return order_ptr;
+    }
+    return order_ptr;
+}
+
+Order * OrderBook::lookup(std::string const & orderid_or_clordid)
+{
+    Order * order_ptr = nullptr;
+    auto bi = lookup(m_bids, orderid_or_clordid);
+    if (bi != m_bids.end()) {
+        order_ptr = const_cast<Order*>(&bi->second);
+        return order_ptr;
+    }
+    auto ai = lookup(m_asks, orderid_or_clordid);
+    if (ai != m_asks.end()) {
+        order_ptr = const_cast<Order*>(&ai->second);
         return order_ptr;
     }
     return order_ptr;

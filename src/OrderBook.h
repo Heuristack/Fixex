@@ -20,9 +20,10 @@ public:
     using AskOrders = std::multimap<Price, Order, AskCompare>;
 
 public:
-    Order const * insert(Order const &);
-    Order const * remove(Order const &);
-    Order const * lookup(std::string const & clordid);
+    Order * insert(Order const &);
+    Order * remove(Order const &);
+    Order * remove(std::string const & orderid_or_clordid);
+    Order * lookup(std::string const & orderid_or_clordid);
 
     std::vector<Order> match();
 
@@ -31,10 +32,11 @@ public:
 
 private:
     template <typename Container, typename Iterator = typename Container::const_iterator>
-    Iterator lookup(Container const & container, std::string const & clordid)
+    Iterator lookup(Container const & container, std::string const & orderid_or_clordid)
     {
-        return std::find_if(container.begin(), container.end(), [clordid](std::pair<Price,Order> const & price_order){
-            return price_order.second.get_clordid() == clordid;
+        return std::find_if(container.begin(), container.end(), [orderid_or_clordid](std::pair<Price,Order> const & price_order){
+            return price_order.second.get_orderid() == orderid_or_clordid
+                || price_order.second.get_clordid() == orderid_or_clordid;
         });
     }
 

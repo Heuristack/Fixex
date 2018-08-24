@@ -21,15 +21,29 @@ TEST_CASE("Integrate Quickfix", "integration")
     }
 }
 
+TEST_CASE("Utilities", "util")
+{
+    IdentifierGenerator generator("G", 5000);
+    SECTION("IdentifierGenerator can generate")
+    {
+        REQUIRE(generator.get() == std::string{"G5000"});
+        REQUIRE(generator.get() == std::string{"G5001"});
+    }
+}
+
 TEST_CASE("Exchange Functionalities", "exchange")
 {
-    Order bid("XYZ", "ABC", "201808210001", "APPL", Order::Type::MARKET, Order::Side::BUY,  220, 200);
-    Order ask("XYZ", "ABC", "201808210002", "APPL", Order::Type::MARKET, Order::Side::SELL, 215, 100);
+    IdentifierGenerator generator("ORDERID", 1000);
+
+    Order bid("XYZ", "ABC", "201808210001", generator.get(), "APPL", Order::Type::MARKET, Order::Side::BUY,  220, 200);
+    Order ask("XYZ", "ABC", "201808210002", generator.get(), "APPL", Order::Type::MARKET, Order::Side::SELL, 215, 100);
 
     SECTION("Order can be constructed")
     {
         REQUIRE(bid.get_price() == 220);
         REQUIRE(ask.get_price() == 215);
+        REQUIRE(bid.get_orderid() == std::string{"ORDERID1000"});
+        REQUIRE(ask.get_orderid() == std::string{"ORDERID1001"});
     }
 
     OrderBook orderbook;
@@ -46,6 +60,8 @@ TEST_CASE("Exchange Functionalities", "exchange")
     {
         REQUIRE(orderbook.lookup(bid.get_clordid())->get_price() == bid.get_price());
         REQUIRE(orderbook.lookup(ask.get_clordid())->get_price() == ask.get_price());
+        REQUIRE(orderbook.lookup(bid.get_orderid())->get_orderqty() == bid.get_orderqty());
+        REQUIRE(orderbook.lookup(ask.get_orderid())->get_orderqty() == ask.get_orderqty());
     }
 
     auto filled_orders = orderbook.match();
@@ -66,6 +82,12 @@ TEST_CASE("Exchange Functionalities", "exchange")
         REQUIRE(orderbook.lookup(bid.get_clordid())->get_cumqty() == 100);
     }
 
+    SECTION("OrderBook can remove")
+    {
+        orderbook.remove(bid);
+        REQUIRE(orderbook.get_bidsize() == 0);
+    }
+
     Exchange exchange;
     exchange.insert(bid);
     exchange.insert(ask);
@@ -83,16 +105,6 @@ TEST_CASE("Exchange Functionalities", "exchange")
         REQUIRE(exchange.lookup(bid.get_symbol())->get_bidsize() == 1);
         REQUIRE(exchange.lookup(ask.get_symbol())->get_asksize() == 0);
         REQUIRE(exchange_filled_orders.size() == 2);
-    }
-}
-
-TEST_CASE("Utilities", "util")
-{
-    IdentifierGenerator generator("G", 5000);
-    SECTION("IdentifierGenerator can generate")
-    {
-        REQUIRE(generator.get() == std::string{"G5000"});
-        REQUIRE(generator.get() == std::string{"G5001"});
     }
 }
 

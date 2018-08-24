@@ -15,12 +15,12 @@ public:
 
 public:
     Order(std::string const & sender, std::string const & target,
-          std::string const & clordid,
+          std::string const & clordid, std::string const & orderid,
           std::string const & symbol,
           Type type, Side side,
           double price, long orderqty)
     : m_sender{sender}, m_target{target},
-      m_clordid{clordid},
+      m_clordid{clordid}, m_orderid{orderid},
       m_symbol{symbol},
       m_type{type}, m_side{side},
       m_price{price},m_orderqty{orderqty}
@@ -36,6 +36,7 @@ public:
     std::string const & get_sender() const { return m_sender; }
     std::string const & get_target() const { return m_target; }
     std::string const & get_clordid() const { return m_clordid; }
+    std::string const & get_orderid() const { return m_orderid; }
     std::string const & get_symbol() const { return m_symbol; }
     Type get_type() const { return m_type; }
     Side get_side() const { return m_side; }
@@ -66,6 +67,7 @@ private:
     std::string m_sender;
     std::string m_target;
     std::string m_clordid;
+    std::string m_orderid;
     std::string m_symbol;
     Type m_type;
     Side m_side;
