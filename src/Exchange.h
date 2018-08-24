@@ -15,8 +15,8 @@ class Exchange : public Application
 {
 public:
     void onMessage(FIX42::NewOrderSingle const &, FIX::SessionID const &) override;
-    void onMessage(FIX42::OrderCancelRequest const &, FIX::SessionID const &) override;
     void onMessage(FIX42::OrderCancelReplaceRequest const &, FIX::SessionID const &) override;
+    void onMessage(FIX42::OrderCancelRequest const &, FIX::SessionID const &) override;
 
 public:
     enum class RequestType { CREATE, UPDATE, REMOVE, TRADED };

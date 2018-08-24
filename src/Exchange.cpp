@@ -32,14 +32,16 @@ catch (std::exception const & e)
     std::cerr << "Exception Caught: " << e.what() << "!" << std::endl;
 }
 
-void Exchange::onMessage(FIX42::OrderCancelRequest const & message, FIX::SessionID const & session_id) try
-{}
+void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::SessionID const & session_id) try
+{
+
+}
 catch (std::exception const & e)
 {
     std::cerr << "Exception Caught: " << e.what() << "!" << std::endl;
 }
 
-void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::SessionID const & session_id) try
+void Exchange::onMessage(FIX42::OrderCancelRequest const & message, FIX::SessionID const & session_id) try
 {}
 catch (std::exception const & e)
 {
