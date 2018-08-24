@@ -24,18 +24,18 @@ public:
     void update(Order const &);
     void cancel(Order const &);
     void report(Order const *, RequestType);
-    void reject(Order const *, RequestType, std::string const &);
+    void reject(Order const *, Order const *, RequestType, std::string const &);
 
 public:
     using Symbol = std::string;
     using SymbolIndexedOrderBooks = std::unordered_map<Symbol, OrderBook>;
 
 public:
-    Order const * insert(Order const &);
-    Order const * remove(Order const &);
-    Order const * lookup(Symbol const & symbol, std::string const & clordid);
+    Order const * insert(Order const & order) { return m_orderbooks[order.get_symbol()].insert(order); }
+    Order const * remove(Order const & order) { return m_orderbooks[order.get_symbol()].remove(order); }
+    Order const * lookup(Symbol const & symbol, std::string const & clordid) { return m_orderbooks[symbol].lookup(clordid); }
 
-    OrderBook const * lookup(Symbol const & symbol);
+    OrderBook const * lookup(Symbol const & symbol) { return &(m_orderbooks[symbol]); }
     std::vector<Order> match(Symbol const & symbol);
     std::vector<Order> match();
 

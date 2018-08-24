@@ -49,19 +49,14 @@ catch (std::exception const & e)
 void Exchange::accept(Order const & order)
 {
     Order const * order_ptr = insert(order);
-    std::cerr << "INSERT: " <<  *this << std::endl;
     if (order_ptr != nullptr) {
         report(&order, RequestType::CREATE);
-
-        auto matched_orders = match();
-        std::cerr << "MATCH:" << matched_orders.size() << ":" <<  *this << std::endl;
-
-        for (auto const & matched_order : matched_orders) {
+        for (auto const & matched_order : match(order.get_symbol())) {
             report(&matched_order, RequestType::TRADED);
         }
     }
     else {
-        reject(&order, RequestType::CREATE, "can't create order");
+        reject(&order, nullptr, RequestType::CREATE, "can't create order");
     }
 }
 
@@ -71,10 +66,11 @@ void Exchange::update(Order const &)
 void Exchange::cancel(Order const &)
 {}
 
-void Exchange::report(Order const * order, RequestType reqtype)
+void Exchange::report(Order const * order, RequestType reqtype) try
 {
     FIX::TargetCompID target(order->get_sender());
     FIX::SenderCompID sender(order->get_target());
+
     FIX::ExecTransType exectranstype;
     char status = '0';
     switch (reqtype) {
@@ -96,6 +92,7 @@ void Exchange::report(Order const * order, RequestType reqtype)
             else status = FIX::OrdStatus_PARTIALLY_FILLED;
             break;
     }
+
     FIX42::ExecutionReport execution = FIX42::ExecutionReport(
         FIX::OrderID(get_ordid_generator().get()),
         FIX::ExecID(get_exeid_generator().get()),
@@ -114,28 +111,51 @@ void Exchange::report(Order const * order, RequestType reqtype)
         execution.set(FIX::LastShares(order->get_lastqty()));
         execution.set(FIX::LastPx(order->get_lastpx()));
     }
+
     FIX::Session::sendToTarget(execution, sender, target);
 }
-
-void Exchange::reject(Order const * order, RequestType reqtype, std::string const & reason)
-{}
-
-Order const * Exchange::insert(Order const & order)
+catch (std::exception const & e)
 {
-    return m_orderbooks[order.get_symbol()].insert(order);
-}
-Order const * Exchange::remove(Order const & order)
-{
-    return m_orderbooks[order.get_symbol()].remove(order);
-}
-Order const * Exchange::lookup(Symbol const & symbol, std::string const & clordid)
-{
-    return m_orderbooks[symbol].lookup(clordid);
+    std::cerr << "Exception Caught: " << e.what() << "!" << std::endl;
 }
 
-OrderBook const * Exchange::lookup(Symbol const & symbol)
+void Exchange::reject(Order const * order, Order const * origorder, RequestType reqtype, std::string const & reason) try
 {
-    return &(m_orderbooks[symbol]);
+    FIX::TargetCompID target(order->get_sender());
+    FIX::SenderCompID sender(order->get_target());
+    if (reqtype == RequestType::CREATE) {
+        FIX42::ExecutionReport execution = FIX42::ExecutionReport(
+            FIX::OrderID(get_ordid_generator().get()),
+            FIX::ExecID(get_exeid_generator().get()),
+            FIX::ExecTransType(FIX::ExecTransType_NEW),
+            FIX::ExecType(FIX::ExecType_REJECTED),
+            FIX::OrdStatus(FIX::OrdStatus_REJECTED),
+            FIX::Symbol(order->get_symbol()),
+            FIX::Side(convert(order->get_side())),
+            FIX::LeavesQty(0),
+            FIX::CumQty(0),
+            FIX::AvgPx(0)
+        );
+        execution.set(FIX::ClOrdID(order->get_clordid()));
+        execution.set(FIX::OrderQty(order->get_orderqty()));
+        FIX::Session::sendToTarget(execution, sender, target);
+    }
+    else {
+        FIX::CxlRejResponseTo cxlrejresponseto = '1';
+        if (reqtype == RequestType::UPDATE) cxlrejresponseto = '2';
+        FIX42::OrderCancelReject cancelreject = FIX42::OrderCancelReject(
+            FIX::OrderID(get_ordid_generator().get()),
+            FIX::ClOrdID(order->get_clordid()),
+            FIX::OrigClOrdID(origorder->get_clordid()),
+            FIX::OrdStatus(FIX::OrdStatus_REJECTED),
+            cxlrejresponseto
+        );
+        FIX::Session::sendToTarget(cancelreject, sender, target);
+    }
+}
+catch (std::exception const & e)
+{
+    std::cerr << "Exception Caught: " << e.what() << "!" << std::endl;
 }
 
 std::vector<Order> Exchange::match(Symbol const & symbol)
