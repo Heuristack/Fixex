@@ -24,7 +24,7 @@ public:
     void update(Order const &);
     void cancel(Order const &);
     void report(Order const *, RequestType);
-    void reject(Order const *, RequestType);
+    void reject(Order const *, RequestType, std::string const &);
 
 public:
     using Symbol = std::string;
@@ -36,6 +36,7 @@ public:
     Order const * lookup(Symbol const & symbol, std::string const & clordid);
 
     OrderBook const * lookup(Symbol const & symbol);
+    std::vector<Order> match(Symbol const & symbol);
     std::vector<Order> match();
 
 private:
@@ -44,6 +45,11 @@ private:
 public:
     friend std::ostream & operator << (std::ostream & stream, Exchange const & exchange);
 };
+
+inline Order::Side convert(FIX::Side const & side) { if (side == FIX::Side_SELL) return Order::Side::SELL; else return Order::Side::BUY; }
+inline Order::Type convert(FIX::OrdType const & ordtype) { if (ordtype == FIX::OrdType_LIMIT) return Order::Type::LIMIT; else return Order::Type::MARKET; }
+inline FIX::Side convert(Order::Side side) { if (side == Order::Side::SELL) return FIX::Side_SELL; else return FIX::Side_BUY; }
+inline FIX::OrdType convert(Order::Type ordtype) { if (ordtype == Order::Type::LIMIT) return FIX::OrdType_LIMIT; else return FIX::OrdType_MARKET; }
 
 }
 

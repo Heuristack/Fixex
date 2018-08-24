@@ -14,12 +14,12 @@ public:
     enum class Type { MARKET, LIMIT };
 
 public:
-    Order(std::string const & owner, std::string const & target,
+    Order(std::string const & sender, std::string const & target,
           std::string const & clordid,
           std::string const & symbol,
           Type type, Side side,
           double price, long orderqty)
-    : m_owner{owner}, m_target{target},
+    : m_sender{sender}, m_target{target},
       m_clordid{clordid},
       m_symbol{symbol},
       m_type{type}, m_side{side},
@@ -33,7 +33,7 @@ public:
     }
 
 public:
-    std::string const & get_owner() const { return m_owner; }
+    std::string const & get_sender() const { return m_sender; }
     std::string const & get_target() const { return m_target; }
     std::string const & get_clordid() const { return m_clordid; }
     std::string const & get_symbol() const { return m_symbol; }
@@ -63,7 +63,7 @@ public:
     }
 
 private:
-    std::string m_owner;
+    std::string m_sender;
     std::string m_target;
     std::string m_clordid;
     std::string m_symbol;

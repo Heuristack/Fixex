@@ -66,7 +66,7 @@ std::vector<Order> OrderBook::match()
     while (!m_bids.empty() && !m_asks.empty()) {
         auto & bid = m_bids.begin()->second;
         auto & ask = m_asks.begin()->second;
-        if (bid.get_price() > ask.get_price()) {
+        if (bid.get_price() >= ask.get_price()) {
             match(bid, ask);
             orders.push_back(bid);
             orders.push_back(ask);
