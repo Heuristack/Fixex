@@ -31,11 +31,11 @@ public:
     using SymbolIndexedOrderBooks = std::unordered_map<Symbol, OrderBook>;
 
 public:
-    Order const * insert(Order const & order) { return m_orderbooks[order.get_symbol()].insert(order); }
-    Order const * remove(Order const & order) { return m_orderbooks[order.get_symbol()].remove(order); }
-    Order const * lookup(Symbol const & symbol, std::string const & clordid) { return m_orderbooks[symbol].lookup(clordid); }
+    Order * insert(Order const & order) { return m_orderbooks[order.get_symbol()].insert(order); }
+    Order * remove(Order const & order) { return m_orderbooks[order.get_symbol()].remove(order); }
+    Order * lookup(Symbol const & symbol, std::string const & orderid_or_clordid) { return m_orderbooks[symbol].lookup(orderid_or_clordid); }
 
-    OrderBook const * lookup(Symbol const & symbol) { return &(m_orderbooks[symbol]); }
+    OrderBook * lookup(Symbol const & symbol) { return &(m_orderbooks[symbol]); }
     std::vector<Order> match(Symbol const & symbol);
     std::vector<Order> match();
 

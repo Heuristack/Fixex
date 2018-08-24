@@ -4,21 +4,20 @@ namespace fixex {
 
 void Exchange::onMessage(FIX42::NewOrderSingle const & message, FIX::SessionID const & session_id) try
 {
-    FIX::SenderCompID sender;
-    FIX::TargetCompID target;
+    FIX::SenderCompID sender; FIX::TargetCompID target;
     FIX::ClOrdID clordid;
     FIX::Symbol symbol;
-    FIX::OrdType ordtype;
     FIX::Side side;
+    FIX::OrdType ordtype;
     FIX::Price price;
     FIX::OrderQty orderqty;
     FIX::TimeInForce timeinforce(FIX::TimeInForce_DAY);
     message.getHeader().get(sender);
     message.getHeader().get(target);
     message.get(clordid);
+    message.get(side);
     message.get(symbol);
     message.get(ordtype);
-    message.get(side);
     if (ordtype == FIX::OrdType_LIMIT) {
         message.get(price);
     }
@@ -34,7 +33,30 @@ catch (std::exception const & e)
 
 void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::SessionID const & session_id) try
 {
-
+    FIX::SenderCompID sender;
+    FIX::TargetCompID target;
+    FIX::OrderID orderid;
+    FIX::ClOrdID clordid;
+    FIX::Symbol symbol;
+    FIX::Side side;
+    FIX::OrdType ordtype;
+    FIX::Price price;
+    FIX::OrderQty orderqty;
+    FIX::TimeInForce timeinforce(FIX::TimeInForce_DAY);
+    message.getHeader().get(sender);
+    message.getHeader().get(target);
+    message.get(orderid);
+    message.get(clordid);
+    message.get(side);
+    message.get(symbol);
+    message.get(ordtype);
+    if (ordtype == FIX::OrdType_LIMIT) {
+        message.get(price);
+    }
+    message.get(orderqty);
+    message.get(timeinforce);
+    Order order(sender, target, clordid, orderid, symbol, convert(ordtype), convert(side), price, orderqty);
+    update(order);
 }
 catch (std::exception const & e)
 {
@@ -42,7 +64,21 @@ catch (std::exception const & e)
 }
 
 void Exchange::onMessage(FIX42::OrderCancelRequest const & message, FIX::SessionID const & session_id) try
-{}
+{
+    FIX::SenderCompID sender;
+    FIX::TargetCompID target;
+    FIX::OrderID orderid;
+    FIX::ClOrdID clordid;
+    FIX::Symbol symbol;
+    FIX::Side side;
+    message.getHeader().get(sender);
+    message.getHeader().get(target);
+    message.get(orderid);
+    message.get(clordid);
+    message.get(side);
+    Order order(sender, target, clordid, orderid, symbol, Order::Type::LIMIT, convert(side), 0, 0);
+    cancel(order);
+}
 catch (std::exception const & e)
 {
     std::cerr << "Exception Caught: " << e.what() << "!" << std::endl;
@@ -62,11 +98,42 @@ void Exchange::accept(Order const & order)
     }
 }
 
-void Exchange::update(Order const &)
-{}
+void Exchange::update(Order const & order)
+{
+    Order * origorder_ptr = lookup(order.get_symbol(), order.get_orderid());
+    if (origorder_ptr != nullptr) {
+        /**
+         * TODO:
+         * OrderCancel Replacement Rules:
+         * 1. price or quant
+         * 2. quant can't increase
+         * 3. race
+         *
+        **/
+        origorder_ptr->update_clordid(order.get_clordid());
+        origorder_ptr->update_price(order.get_price());
+        origorder_ptr->update_orderqty(order.get_orderqty());
+        report(origorder_ptr, RequestType::UPDATE);
+        for (auto const & matched_order : match(order.get_symbol())) {
+            report(&matched_order, RequestType::TRADED);
+        }
+    }
+    else {
+        reject(&order, origorder_ptr, RequestType::UPDATE, "can't update order");
+    }
+}
 
-void Exchange::cancel(Order const &)
-{}
+void Exchange::cancel(Order const & order)
+{
+    Order * origorder_ptr = lookup(order.get_symbol(), order.get_orderid());
+    if (origorder_ptr != nullptr) {
+        remove(*origorder_ptr);
+        report(&order, RequestType::REMOVE);
+    }
+    else {
+        reject(&order, origorder_ptr, RequestType::UPDATE, "can't update order");
+    }
+}
 
 void Exchange::report(Order const * order, RequestType reqtype) try
 {

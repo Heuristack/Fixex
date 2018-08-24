@@ -63,6 +63,28 @@ public:
         m_leavesqty -= q;
     }
 
+    bool update_price(double p)
+    {
+        m_price = p;
+        return true;
+    }
+
+    bool update_orderqty(double q)
+    {
+        double delta = q - m_leavesqty;
+        if ((m_orderqty + delta >= 0) && (m_leavesqty + delta >= 0)) {
+            m_orderqty += delta;
+            m_leavesqty += delta;
+            return true;
+        }
+        return false;
+    }
+
+    void update_clordid(std::string const & clordid)
+    {
+        m_clordid = clordid;
+    }
+
 private:
     std::string m_sender;
     std::string m_target;
