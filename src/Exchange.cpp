@@ -102,17 +102,28 @@ void Exchange::update(Order const & order)
 {
     Order * origorder_ptr = lookup(order.get_symbol(), order.get_orderid());
     if (origorder_ptr != nullptr) {
-        /**
-         * TODO:
-         * OrderCancel Replacement Rules:
-         * 1. price or quant
-         * 2. quant can't increase
-         * 3. race
-         *
-        **/
+        if ((order.get_price() != origorder_ptr->get_price()) &&
+            (order.get_orderqty() != origorder_ptr->get_orderqty())) {
+            reject(&order, origorder_ptr, RequestType::UPDATE, "can't update both price and orderqty");
+            return;
+        }
+
+        if (!origorder_ptr->update_price(order.get_price())) {
+            reject(&order, origorder_ptr, RequestType::UPDATE, "illegal price");
+            return;
+        }
+        if (origorder_ptr->get_orderqty() > order.get_orderqty() ||
+            !origorder_ptr->update_orderqty(order.get_orderqty())) {
+            reject(&order, origorder_ptr, RequestType::UPDATE, "illegal orderqty");
+            return;
+        }
+
+        if (origorder_ptr->is_closed()) {
+            remove(*origorder_ptr);
+            report(&order, RequestType::REMOVE);
+            return;
+        }
         origorder_ptr->update_clordid(order.get_clordid());
-        origorder_ptr->update_price(order.get_price());
-        origorder_ptr->update_orderqty(order.get_orderqty());
         report(origorder_ptr, RequestType::UPDATE);
         for (auto const & matched_order : match(order.get_symbol())) {
             report(&matched_order, RequestType::TRADED);

@@ -65,6 +65,12 @@ public:
 
     bool update_price(double p)
     {
+        if (-1.0e-6 < p && p < 1.0e-6) {
+            return false;
+        }
+        if (m_price == p) {
+            return true;
+        }
         m_price = p;
         return true;
     }
