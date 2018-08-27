@@ -37,6 +37,7 @@ void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::
     FIX::TargetCompID target;
     FIX::OrderID orderid;
     FIX::ClOrdID clordid;
+    FIX::OrigClOrdID origclordid;
     FIX::Symbol symbol;
     FIX::Side side;
     FIX::OrdType ordtype;
@@ -47,6 +48,7 @@ void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::
     message.getHeader().get(target);
     message.get(orderid);
     message.get(clordid);
+    message.get(origclordid);
     message.get(side);
     message.get(symbol);
     message.get(ordtype);
@@ -56,6 +58,7 @@ void Exchange::onMessage(FIX42::OrderCancelReplaceRequest const & message, FIX::
     message.get(orderqty);
     message.get(timeinforce);
     Order order(sender, target, clordid, orderid, symbol, convert(ordtype), convert(side), price, orderqty);
+    order.set_origclordid(origclordid);
     update(order);
 }
 catch (std::exception const & e)
@@ -69,14 +72,18 @@ void Exchange::onMessage(FIX42::OrderCancelRequest const & message, FIX::Session
     FIX::TargetCompID target;
     FIX::OrderID orderid;
     FIX::ClOrdID clordid;
+    FIX::OrigClOrdID origclordid;
     FIX::Symbol symbol;
     FIX::Side side;
     message.getHeader().get(sender);
     message.getHeader().get(target);
     message.get(orderid);
     message.get(clordid);
+    message.get(origclordid);
     message.get(side);
+    message.get(symbol);
     Order order(sender, target, clordid, orderid, symbol, Order::Type::LIMIT, convert(side), 0, 0);
+    order.set_origclordid(origclordid);
     cancel(order);
 }
 catch (std::exception const & e)
@@ -86,6 +93,7 @@ catch (std::exception const & e)
 
 void Exchange::accept(Order const & order)
 {
+    std::cerr << "accept order" << std::endl;
     Order const * order_ptr = insert(order);
     if (order_ptr != nullptr) {
         report(&order, RequestType::CREATE);
@@ -100,6 +108,7 @@ void Exchange::accept(Order const & order)
 
 void Exchange::update(Order const & order)
 {
+    std::cerr << "update order" << std::endl;
     Order * origorder_ptr = lookup(order.get_symbol(), order.get_orderid());
     if (origorder_ptr != nullptr) {
         if ((order.get_price() != origorder_ptr->get_price()) &&
@@ -112,7 +121,7 @@ void Exchange::update(Order const & order)
             reject(&order, origorder_ptr, RequestType::UPDATE, "illegal price");
             return;
         }
-        if (origorder_ptr->get_orderqty() > order.get_orderqty() ||
+        if (origorder_ptr->get_orderqty() < order.get_orderqty() ||
             !origorder_ptr->update_orderqty(order.get_orderqty())) {
             reject(&order, origorder_ptr, RequestType::UPDATE, "illegal orderqty");
             return;
@@ -125,6 +134,7 @@ void Exchange::update(Order const & order)
         }
         origorder_ptr->update_clordid(order.get_clordid());
         report(origorder_ptr, RequestType::UPDATE);
+
         for (auto const & matched_order : match(order.get_symbol())) {
             report(&matched_order, RequestType::TRADED);
         }
@@ -136,18 +146,20 @@ void Exchange::update(Order const & order)
 
 void Exchange::cancel(Order const & order)
 {
+    std::cerr << "cancel order" << std::endl;
     Order * origorder_ptr = lookup(order.get_symbol(), order.get_orderid());
     if (origorder_ptr != nullptr) {
         remove(*origorder_ptr);
         report(&order, RequestType::REMOVE);
     }
     else {
-        reject(&order, origorder_ptr, RequestType::UPDATE, "can't update order");
+        reject(&order, nullptr, RequestType::UPDATE, "can't update order");
     }
 }
 
 void Exchange::report(Order const * order, RequestType reqtype) try
 {
+    std::cerr << "report order" << std::endl;
     FIX::TargetCompID target(order->get_sender());
     FIX::SenderCompID sender(order->get_target());
 
@@ -191,6 +203,8 @@ void Exchange::report(Order const * order, RequestType reqtype) try
         execution.set(FIX::LastShares(order->get_lastqty()));
         execution.set(FIX::LastPx(order->get_lastpx()));
     }
+    execution.set(FIX::Price(order->get_price()));
+    execution.set(FIX::OrderQty(order->get_orderqty()));
 
     FIX::Session::sendToTarget(execution, sender, target);
 }
@@ -201,6 +215,7 @@ catch (std::exception const & e)
 
 void Exchange::reject(Order const * order, Order const * origorder, RequestType reqtype, std::string const & reason) try
 {
+    std::cerr << "reject order" << std::endl;
     FIX::TargetCompID target(order->get_sender());
     FIX::SenderCompID sender(order->get_target());
     if (reqtype == RequestType::CREATE) {
@@ -226,10 +241,16 @@ void Exchange::reject(Order const * order, Order const * origorder, RequestType 
         FIX42::OrderCancelReject cancelreject = FIX42::OrderCancelReject(
             FIX::OrderID(order->get_orderid()),
             FIX::ClOrdID(order->get_clordid()),
-            FIX::OrigClOrdID(origorder->get_clordid()),
+            FIX::OrigClOrdID(order->get_origclordid()),
             FIX::OrdStatus(FIX::OrdStatus_REJECTED),
             cxlrejresponseto
         );
+        FIX::CxlRejReason cxlrejreason = '2';
+        if (origorder == nullptr) {
+            cxlrejreason = '1';
+        }
+        cancelreject.set(cxlrejreason);
+        cancelreject.set(FIX::Text(reason));
         FIX::Session::sendToTarget(cancelreject, sender, target);
     }
 }

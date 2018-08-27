@@ -37,6 +37,7 @@ public:
     std::string const & get_target() const { return m_target; }
     std::string const & get_clordid() const { return m_clordid; }
     std::string const & get_orderid() const { return m_orderid; }
+    std::string const & get_origclordid() const { return m_origclordid; }
     std::string const & get_symbol() const { return m_symbol; }
     Type get_type() const { return m_type; }
     Side get_side() const { return m_side; }
@@ -52,6 +53,12 @@ public:
 
     bool is_filled() const { return m_orderqty == m_cumqty; }
     bool is_closed() const { return m_leavesqty == 0; }
+
+public:
+    void set_origclordid(std::string const & origclordid)
+    {
+        m_origclordid = origclordid;
+    }
 
 public:
     void execute(double p, long q)
@@ -88,6 +95,7 @@ public:
 
     void update_clordid(std::string const & clordid)
     {
+        m_origclordid = m_clordid;
         m_clordid = clordid;
     }
 
@@ -96,6 +104,7 @@ private:
     std::string m_target;
     std::string m_clordid;
     std::string m_orderid;
+    std::string m_origclordid;
     std::string m_symbol;
     Type m_type;
     Side m_side;

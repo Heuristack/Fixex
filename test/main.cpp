@@ -98,6 +98,12 @@ TEST_CASE("Exchange Functionalities", "exchange")
         REQUIRE(exchange.lookup(ask.get_symbol())->get_asksize() == 1);
     }
 
+    SECTION("Exchange can lookup Orders")
+    {
+        REQUIRE(exchange.lookup(bid.get_symbol(), bid.get_orderid()) != nullptr);
+        REQUIRE(exchange.lookup(ask.get_symbol(), ask.get_orderid()) != nullptr);
+    }
+
     auto exchange_filled_orders = exchange.match();
 
     SECTION("Exchange can match")
